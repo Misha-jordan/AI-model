@@ -1,0 +1,20 @@
+// Убедимся, что передаём chatInput с сырыми данными статуса
+const iteration = $json.iteration || 1;
+const sessionId = $json.sessionId || 'tmp-' + Date.now();
+
+// Предположим, что статус пришёл из HTTP Request1 или Code Node
+const rawStatus = {
+  status: "running",
+  position: "x=5.2,y=8.7",
+  action: "scan",
+  target: "area_5",
+  task_id: "tmp-12345"
+};
+
+return [{
+  json: {
+    iteration,
+    sessionId,
+    chatInput: JSON.stringify(rawStatus)  // ← это ключевое!
+  }
+}];
