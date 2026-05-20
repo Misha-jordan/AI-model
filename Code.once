@@ -1,0 +1,28 @@
+// Получаем body из Webhook (входные данные)
+const input = $json;
+
+// Если пришёл объект с body — извлекаем команду из body.command
+let cmd = '';
+if (input.body && typeof input.body === 'object') {
+  cmd = input.body.command || input.body.chatInput || '';
+} else if (typeof input === 'string') {
+  // Редкий случай: raw строка
+  cmd = input;
+} else {
+  cmd = input.command || input.chatInput || '';
+}
+
+cmd = cmd.trim();
+
+// Если команда пустая или шаблонная — даем fallback
+if (!cmd || cmd === 'Выполните команду' || cmd === 'введите команду') {
+  cmd = 'сканируй зону 1';
+}
+
+return [{
+  json: {
+    chatInput: cmd,
+    sessionId: 'nanorobot-' + Date.now(),
+    originalCommand: cmd
+  }
+}];
