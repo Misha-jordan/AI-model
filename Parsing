@@ -1,0 +1,19 @@
+// AI Agent возвращает: { "output": "{...}" }
+const rawJsonString = $json['output'];
+
+let parsed;
+try {
+  parsed = JSON.parse(rawJsonString);
+} catch (e) {
+  // Fallback на случай ошибки
+  parsed = {
+    action: 'error',
+    target: 'unknown',
+    task_id: 'tmp-' + Date.now(),
+    response_text: '❌ Ошибка: AI вернул некорректный JSON'
+  };
+}
+
+return [{
+  json: parsed
+}];
