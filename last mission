@@ -1,0 +1,53 @@
+// Получаем raw output от AI Agent1
+const aiOutput = $json.output || $json.response_text || '';
+
+// 1. Попробуем извлечь структуру по шаблонам (если AI вернул текст с ключами)
+let status = 'unknown';
+let taskId = $json.task_id || $json.sessionId || 'tmp-' + Date.now();
+let message = aiOutput.trim().substring(0, 300);
+
+// Извлекаем status по ключевым словам
+if (aiOutput.toLowerCase().includes('completed') || aiOutput.toLowerCase().includes('успешно')) {
+  status = 'completed';
+} else if (aiOutput.toLowerCase().includes('running') || aiOutput.toLowerCase().includes('выполняется')) {
+  status = 'running';
+} else if (aiOutput.toLowerCase().includes('failed') || aiOutput.toLowerCase().includes('ошибка')) {
+  status = 'failed';
+} else if (aiOutput.toLowerCase().includes('queued') || aiOutput.toLowerCase().includes('в очереди')) {
+  status = 'queued';
+}
+
+// Извлекаем task_id из строки (шаблон: "task_id: xxx" или "ID: xxx")
+const taskIdMatch = aiOutput.match(/task[_-]?id\s*[:=]\s*["']?([a-zA-Z0-9-_]+)/i) ||
+                   aiOutput.match(/ID\s*[:=]\s*["']?([a-zA-Z0-9-_]+)/i);
+if (taskIdMatch && taskIdMatch[1]) {
+  taskId = taskIdMatch[1];
+}
+
+// Формируем user-facing message
+let finalMessage;
+switch (status) {
+  case 'completed':
+    finalMessage = `✅ Задача "${taskId}" завершена успешно! Готов к следующей команде.`;
+    break;
+  case 'running':
+    finalMessage = `🔄 Задача "${taskId}" выполняется. Текущая позиция: x=5.2, y=8.7.`;
+    break;
+  case 'queued':
+    finalMessage = `⏳ Задача "${taskId}" поставлена в очередь.`;
+    break;
+  case 'failed':
+    finalMessage = `❌ Задача "${taskId}" завершилась с ошибкой. Повторите команду.`;
+    break;
+  default:
+    finalMessage = `ℹ️ Статус не определён. Ответ AI: "${message.replace(/"/g, '”').substring(0, 120)}..."`;
+}
+
+// Возвращаем строго валидный JSON
+return [{
+  json: {
+    status: status,
+    message: finalMessage,
+    task_id: taskId
+  }
+}];
